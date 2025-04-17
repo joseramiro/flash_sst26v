@@ -19,12 +19,12 @@
 
 void SST26V_StartTranmission(SPIConfiguration_t *spi)
 {
-    spi->cs_clear();
+    spi->cs.clear();
 }
 
 void SST26V_EndTramission(SPIConfiguration_t *spi)
 {
-    spi->cs_set();
+    spi->cs.set();
 }
 
 void SST26V_SetWriteProtectionHW(SST26VConf_t *conf)
