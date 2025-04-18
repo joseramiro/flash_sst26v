@@ -14,7 +14,7 @@
  * @copyright Copyright (c) 2024
  */
 
-#include "libs/util/plibs_utils.h"  // used for SPI struct
+#include "libs/common_c_libs/plib_comm_struct.h"
 
 /** @defgroup SST26V_Registers Registres du SST26V
  *  @{

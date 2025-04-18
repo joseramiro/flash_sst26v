@@ -12,7 +12,7 @@
  * @copyright Copyright (c) 2024
  */
 
-#include "libs/util/plibs_utils.h"  // used for SPI struct
+#include "libs/common_c_libs/plib_comm_struct.h"
 
 /** @brief Données fictives pendant la lecture */
 #define SST26V_DUMMY_DATA       0xFF
