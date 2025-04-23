@@ -21,26 +21,26 @@
  * @brief Écrit un byte dans un registre du SST26V.
  * @param data Byte à écrire
  */
-void SST26V_WriteByte(SPIConfiguration_t *spi, unsigned char* data);
+void SST26V_WriteByte(SPI_t *spi, unsigned char* data);
 
 /**
  * @brief Lit un byte dans un registre du SST26V
  * @param data Byte à lire
  */
-void SST26V_ReadByte(SPIConfiguration_t *spi, unsigned char* data);
+void SST26V_ReadByte(SPI_t *spi, unsigned char* data);
 
 /**
  * @brief Écrit un buffer dans un registre du SST26V.
  * @param data Buffer à écrire
  * @param size Taille de buffer en bytes
  */
-void SST26V_WriteBuffer(SPIConfiguration_t *spi, unsigned char* data, unsigned int size);
+void SST26V_WriteBuffer(SPI_t *spi, unsigned char* data, unsigned int size);
 
 /**
  * @brief Lit un buffer dans un registre du SST26V
  * @param data Buffer à lire
  * @param size Taille de buffer en bytes
  */
-void SST26V_ReadBuffer(SPIConfiguration_t *spi, unsigned char* data, unsigned int size);
+void SST26V_ReadBuffer(SPI_t *spi, unsigned char* data, unsigned int size);
 
 #endif  // PLIB_MEMORY_SPI_H

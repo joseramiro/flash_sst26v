@@ -13,7 +13,7 @@
 #include "peripheral/spi/spi_master/plib_spi2_master.h"
 #include "peripheral/spi/spi_master/plib_spi1_master.h"
 
-void SST26V_WriteByte(SPIConfiguration_t *spi, unsigned char* data)
+void SST26V_WriteByte(SPI_t *spi, unsigned char* data)
 {
     if(spi->channel == SPI_CH1)
         SPI1_Write(data, 1);
@@ -21,7 +21,7 @@ void SST26V_WriteByte(SPIConfiguration_t *spi, unsigned char* data)
         SPI2_Write(data, 1);
 }
 
-void SST26V_ReadByte(SPIConfiguration_t *spi, unsigned char* data)
+void SST26V_ReadByte(SPI_t *spi, unsigned char* data)
 {
     if(spi->channel == SPI_CH1)
         SPI1_Read(data, 1);
@@ -29,7 +29,7 @@ void SST26V_ReadByte(SPIConfiguration_t *spi, unsigned char* data)
         SPI2_Read(data, 1);
 }
 
-void SST26V_WriteBuffer(SPIConfiguration_t *spi, unsigned char* data, unsigned int size)
+void SST26V_WriteBuffer(SPI_t *spi, unsigned char* data, unsigned int size)
 {
     unsigned int i = 0;
 
@@ -45,7 +45,7 @@ void SST26V_WriteBuffer(SPIConfiguration_t *spi, unsigned char* data, unsigned i
     }
 }
 
-void SST26V_ReadBuffer(SPIConfiguration_t *spi, unsigned char* data, unsigned int size)
+void SST26V_ReadBuffer(SPI_t *spi, unsigned char* data, unsigned int size)
 {
     if(spi->channel == SPI_CH1)
         SPI1_Read(data, size);

@@ -17,12 +17,12 @@
 
 /* ==== Fonctions SPI ==== */
 
-void SST26V_StartTranmission(SPIConfiguration_t *spi)
+void SST26V_StartTranmission(SPI_t *spi)
 {
     spi->cs.clear();
 }
 
-void SST26V_EndTramission(SPIConfiguration_t *spi)
+void SST26V_EndTramission(SPI_t *spi)
 {
     spi->cs.set();
 }
@@ -87,7 +87,7 @@ void SST26V_LockWrite(SST26VConf_t *conf)
     SST26V_WriteBlockProtectionReg(&conf->spi, tempWriteProtectionRegisters);  
 }
 
-void SST26V_Erase4KBSector(SPIConfiguration_t *spi, unsigned long address)
+void SST26V_Erase4KBSector(SPI_t *spi, unsigned long address)
 {
     unsigned char tmpData[4];
     // Start tranmission
@@ -102,7 +102,7 @@ void SST26V_Erase4KBSector(SPIConfiguration_t *spi, unsigned long address)
     SST26V_EndTramission(spi);
 }
 
-void SST26V_ReadMemory(SPIConfiguration_t *spi, unsigned long address, unsigned int size, unsigned char* data)
+void SST26V_ReadMemory(SPI_t *spi, unsigned long address, unsigned int size, unsigned char* data)
 {
     unsigned char tmpData[4];
     // Start tranmission
@@ -119,7 +119,7 @@ void SST26V_ReadMemory(SPIConfiguration_t *spi, unsigned long address, unsigned 
     SST26V_EndTramission(spi);
 }
 
-void SST26V_WriteMemory(SPIConfiguration_t *spi, unsigned char* data, unsigned long address, unsigned int size)
+void SST26V_WriteMemory(SPI_t *spi, unsigned char* data, unsigned long address, unsigned int size)
 {
     unsigned char tmpData[4];
     // Start tranmission
@@ -136,7 +136,7 @@ void SST26V_WriteMemory(SPIConfiguration_t *spi, unsigned char* data, unsigned l
     SST26V_EndTramission(spi);
 }
 
-void SST26V_EraseMore4KBSector(SPIConfiguration_t *spi, unsigned long address)
+void SST26V_EraseMore4KBSector(SPI_t *spi, unsigned long address)
 {
     unsigned char tmpData[4];
     // Start tranmission
@@ -151,21 +151,21 @@ void SST26V_EraseMore4KBSector(SPIConfiguration_t *spi, unsigned long address)
     SST26V_EndTramission(spi);
 }
 
-void SST26V_EraseAll(SPIConfiguration_t *spi)
+void SST26V_EraseAll(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_CE);
 }
 
 /* ==== Fonctions d'écriture ==== */
 
-void SST26V_WriteRegister(SPIConfiguration_t *spi, unsigned char reg)
+void SST26V_WriteRegister(SPI_t *spi, unsigned char reg)
 {
     SST26V_StartTranmission(spi);
     SST26V_WriteByte(spi, &reg);
     SST26V_EndTramission(spi);
 }
 
-void SST26V_WriteData(SPIConfiguration_t *spi, unsigned char reg, unsigned char* writeData, unsigned int size)
+void SST26V_WriteData(SPI_t *spi, unsigned char reg, unsigned char* writeData, unsigned int size)
 {
     SST26V_StartTranmission(spi);
     SST26V_WriteByte(spi, &reg);
@@ -173,27 +173,27 @@ void SST26V_WriteData(SPIConfiguration_t *spi, unsigned char reg, unsigned char*
     SST26V_EndTramission(spi);
 }
 
-void Memory_WriteDisableReset(SPIConfiguration_t *spi)
+void Memory_WriteDisableReset(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_NOP);
 }
 
-void SST26V_WriteEnableReset(SPIConfiguration_t *spi)
+void SST26V_WriteEnableReset(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_RSTEN);
 }
 
-void SST26V_WriteReset(SPIConfiguration_t *spi)
+void SST26V_WriteReset(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_RST);
 }
 
-void SST26V_WriteStatusReg(SPIConfiguration_t *spi, unsigned char* regs)
+void SST26V_WriteStatusReg(SPI_t *spi, unsigned char* regs)
 {
     SST26V_WriteData(spi, SST26V_WRSR, regs, 2);
 }
 
-void SST26V_WriteBurstLenReg(SPIConfiguration_t *spi, unsigned char length)
+void SST26V_WriteBurstLenReg(SPI_t *spi, unsigned char length)
 {
     unsigned char tmpData[1];
     // Start tranmission
@@ -206,34 +206,34 @@ void SST26V_WriteBurstLenReg(SPIConfiguration_t *spi, unsigned char length)
     SST26V_EndTramission(spi);
 }
 
-void SST26V_WriteEnableWriteReg(SPIConfiguration_t *spi)
+void SST26V_WriteEnableWriteReg(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_WREN);
 }
 
-void SST26V_WriteDisableWriteReg(SPIConfiguration_t *spi)
+void SST26V_WriteDisableWriteReg(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_WRDI);
 }
 
-void SST26V_WriteSuspendWrite(SPIConfiguration_t *spi)
+void SST26V_WriteSuspendWrite(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_WRSU);
 }
 
-void SST26V_WriteResumeWrite(SPIConfiguration_t *spi)
+void SST26V_WriteResumeWrite(SPI_t *spi)
 {
     SST26V_WriteRegister(spi, SST26V_WRRE);
 }
 
-void SST26V_WriteBlockProtectionReg(SPIConfiguration_t *spi, unsigned char* regs)
+void SST26V_WriteBlockProtectionReg(SPI_t *spi, unsigned char* regs)
 {
     SST26V_WriteData(spi, SST26V_WBPR, regs, 18);
 }
 
 /* ==== Fonctions de lecture ==== */
 
-void SST26V_WriteReadRegister(SPIConfiguration_t *spi, unsigned char reg, unsigned int size, unsigned char* readData)
+void SST26V_WriteReadRegister(SPI_t *spi, unsigned char reg, unsigned int size, unsigned char* readData)
 {
     SST26V_StartTranmission(spi);
     SST26V_WriteByte(spi, &reg);
@@ -241,17 +241,17 @@ void SST26V_WriteReadRegister(SPIConfiguration_t *spi, unsigned char reg, unsign
     SST26V_EndTramission(spi);
 }
 
-void SST26V_ReadStatusReg(SPIConfiguration_t *spi, unsigned char* data)
+void SST26V_ReadStatusReg(SPI_t *spi, unsigned char* data)
 {
     SST26V_WriteReadRegister(spi, SST26V_RDSR, 1, data);
 }
 
-void SST26V_ReadConfigurationReg(SPIConfiguration_t *spi, unsigned char* data)
+void SST26V_ReadConfigurationReg(SPI_t *spi, unsigned char* data)
 {
     SST26V_WriteReadRegister(spi, SST26V_RDCR, 1, data);
 }
 
-void SST26V_ReadJEDECIdReg(SPIConfiguration_t *spi, unsigned char* data)
+void SST26V_ReadJEDECIdReg(SPI_t *spi, unsigned char* data)
 {
     unsigned char tmpData[1];
     // Start tranmission
@@ -265,7 +265,7 @@ void SST26V_ReadJEDECIdReg(SPIConfiguration_t *spi, unsigned char* data)
     SST26V_EndTramission(spi);
 }
 
-void SST26V_ReadBlockProtectionReg(SPIConfiguration_t *spi, unsigned char* data)
+void SST26V_ReadBlockProtectionReg(SPI_t *spi, unsigned char* data)
 {
     SST26V_WriteReadRegister(spi, SST26V_RBPR, 18, data);
 }
