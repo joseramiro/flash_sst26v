@@ -1,14 +1,14 @@
 /**
- * @file plib_memory.c
+ * @file plib_sst26v.c
  * @author Ramiro Najera
  * @brief Fichier source principal pour la mémoire flash SST26V
  * 
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 0.1
- * @date 2024-02-21
- * @copyright Copyright (c) 2024
+ * @version 1.0.0
+ * @date 2025-04-23
+ * @copyright Copyright (c) 2025
  */
 
 #include <string.h>
@@ -27,29 +27,29 @@ void SST26V_EndTramission(SPI_t *spi)
     spi->cs.set();
 }
 
-void SST26V_SetWriteProtectionHW(SST26VConf_t *conf)
+void SST26V_SetWriteProtectionHW(SST26V_t *conf)
 {
-    conf->wp_set();
+    conf->wp.set();
 }
 
-void SST26V_ClearWriteProtectionHW(SST26VConf_t *conf)
+void SST26V_ClearWriteProtectionHW(SST26V_t *conf)
 {
-    conf->wp_clear();
+    conf->wp.clear();
 }
 
-void SST26V_SetHoldingHW(SST26VConf_t *conf)
+void SST26V_SetHoldingHW(SST26V_t *conf)
 {
-    conf->hold_set();
+    conf->hold.set();
 }
 
-void SST26V_ClearHoldingHW(SST26VConf_t *conf)
+void SST26V_ClearHoldingHW(SST26V_t *conf)
 {
-    conf->hold_clear();
+    conf->hold.clear();
 }
 
 /* ==== Fonctions de configuration ==== */
 
-void SST26V_Init(SST26VConf_t *conf)
+void SST26V_Init(SST26V_t *conf)
 {
     SST26V_EndTramission(&conf->spi);
     SST26V_SetHoldingHW(conf);            // disabled when set to 1
@@ -59,13 +59,13 @@ void SST26V_Init(SST26VConf_t *conf)
     SST26V_UnlockWrite(conf);   // maybe to delete: unlock only when writting memory??
 }
 
-void SST26V_Reset(SST26VConf_t *conf)
+void SST26V_Reset(SST26V_t *conf)
 {
     SST26V_WriteEnableReset(&conf->spi);
     SST26V_WriteReset(&conf->spi);
 }
 
-void SST26V_UnlockWrite(SST26VConf_t *conf)
+void SST26V_UnlockWrite(SST26V_t *conf)
 {
     unsigned char tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
     // enable write
@@ -76,7 +76,7 @@ void SST26V_UnlockWrite(SST26VConf_t *conf)
     SST26V_WriteBlockProtectionReg(&conf->spi, tempWriteProtectionRegisters); 
 }
 
-void SST26V_LockWrite(SST26VConf_t *conf)
+void SST26V_LockWrite(SST26V_t *conf)
 {
     unsigned char tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
     // enable write
@@ -269,5 +269,3 @@ void SST26V_ReadBlockProtectionReg(SPI_t *spi, unsigned char* data)
 {
     SST26V_WriteReadRegister(spi, SST26V_RBPR, 18, data);
 }
-
-/* ==== Fonctions de calcul ==== */

@@ -1,12 +1,12 @@
 /**
- * @file plib_memory_spi.c
+ * @file plib_sst26v_spi.c
  * @brief Fichier source de bibliothèque de communication SPI de la flash SST26V
  * 
  * Ce fichier contient les fonctions pour communiquer en SPI avec la mémoire flash SST26V
  * @author Ramiro Najera
- * @version 0.1
- * @date 2024-02-21
- * @copyright Copyright (c) 2024
+ * @version 1.0.0
+ * @date 2025-04-23
+ * @copyright Copyright (c) 2025
  */
 
 #include "plib_sst26v_spi.h"
