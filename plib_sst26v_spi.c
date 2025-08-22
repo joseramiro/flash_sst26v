@@ -4,7 +4,7 @@
  * 
  * Ce fichier contient les fonctions pour communiquer en SPI avec la mémoire flash SST26V
  * @author Ramiro Najera
- * @version 1.0.1
+ * @version 1.0.2
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
