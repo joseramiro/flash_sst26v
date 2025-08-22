@@ -9,7 +9,7 @@
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 1.0.1
+ * @version 1.0.2
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
@@ -96,54 +96,54 @@ void SST26V_EndTramission(SPI_t *spi);
 
 /**
  * @brief Met le pin Write Protection à 1
- * @param conf Configuration de SST26V
+ * @param obj Configuration de SST26V
  */
-void SST26V_SetWriteProtectionHW(SST26V_t *conf);
+void SST26V_SetWriteProtectionHW(SST26V_t *obj);
 
 /**
  * @brief Met le pin Write Protection à 0
- * @param conf Configuration de SST26V
+ * @param obj Configuration de SST26V
  */
-void SST26V_ClearWriteProtectionHW(SST26V_t *conf);
+void SST26V_ClearWriteProtectionHW(SST26V_t *obj);
 
 /**
  * @brief Met le pin Holding à 1
- * @param conf Configuration de SST26V
+ * @param obj Configuration de SST26V
  */
-void SST26V_SetHoldingHW(SST26V_t *conf);
+void SST26V_SetHoldingHW(SST26V_t *obj);
 
 /**
  * @brief Met le pin Holding à 0
- * @param conf Configuration de SST26V
+ * @param obj Configuration de SST26V
  */
-void SST26V_ClearHoldingHW(SST26V_t *conf);
+void SST26V_ClearHoldingHW(SST26V_t *obj);
 
 /* ==== Fonctions de configuration ==== */
 
 /**
  * @brief Initialise le module SST26V avec la configuration fournie
- * @param conf Pointeur vers la configuration du module
+ * @param obj Pointeur vers la configuration du module
  */
-void SST26V_Init(SST26V_t *conf);
+void SST26V_Init(SST26V_t *obj);
 
 /**
  * @brief Effectue une réinitialisation en appelant les fonctions d'activation et de
  * réinitialisation.
- * @param conf Pointeur vers la configuration du module
+ * @param obj Pointeur vers la configuration du module
  */
-void SST26V_Reset(SST26V_t *conf);
+void SST26V_Reset(SST26V_t *obj);
 
 /**
  * @brief Débloque l'écriture de protection
- * @param conf Pointeur vers la configuration du module
+ * @param obj Pointeur vers la configuration du module
  */
-void SST26V_UnlockWrite(SST26V_t *conf);
+void SST26V_UnlockWrite(SST26V_t *obj);
 
 /**
  * @brief Bloque l'écriture de protection
- * @param conf Pointeur vers la configuration du module
+ * @param obj Pointeur vers la configuration du module
  */
-void SST26V_LockWrite(SST26V_t *conf);
+void SST26V_LockWrite(SST26V_t *obj);
 
 /**
  * @brief Efface un secteur de mémoire de 4 Ko à l'adresse spécifiée.

@@ -6,7 +6,7 @@
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 1.0.1
+ * @version 1.0.2
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
@@ -33,68 +33,68 @@ void SST26V_EndTramission(SPI_t *spi)
         spi->en.set();
 }
 
-void SST26V_SetWriteProtectionHW(SST26V_t *conf)
+void SST26V_SetWriteProtectionHW(SST26V_t *obj)
 {
-    if(spi->wp.set != NULL)
-        conf->wp.set();
+    if(obj->wp.set != NULL)
+        obj->wp.set();
 }
 
-void SST26V_ClearWriteProtectionHW(SST26V_t *conf)
+void SST26V_ClearWriteProtectionHW(SST26V_t *obj)
 {
-    if(spi->wp.clear != NULL)
-        conf->wp.clear();
+    if(obj->wp.clear != NULL)
+        obj->wp.clear();
 }
 
-void SST26V_SetHoldingHW(SST26V_t *conf)
+void SST26V_SetHoldingHW(SST26V_t *obj)
 {
-    if(spi->hold.set != NULL)
-        conf->hold.set();
+    if(obj->hold.set != NULL)
+        obj->hold.set();
 }
 
-void SST26V_ClearHoldingHW(SST26V_t *conf)
+void SST26V_ClearHoldingHW(SST26V_t *obj)
 {
-    if(spi->hold.clear != NULL)
-        conf->hold.clear();
+    if(obj->hold.clear != NULL)
+        obj->hold.clear();
 }
 
 /* ==== Fonctions de configuration ==== */
 
-void SST26V_Init(SST26V_t *conf)
+void SST26V_Init(SST26V_t *obj)
 {
-    SST26V_EndTramission(&conf->spi);
-    SST26V_SetHoldingHW(conf);            // disabled when set to 1
-    SST26V_SetWriteProtectionHW(conf);    // disabled when set to 1
-    SST26V_Reset(conf);
+    SST26V_EndTramission(&obj->spi);
+    SST26V_SetHoldingHW(obj);            // disabled when set to 1
+    SST26V_SetWriteProtectionHW(obj);    // disabled when set to 1
+    SST26V_Reset(obj);
     // unlock write
-    SST26V_UnlockWrite(conf);   // maybe to delete: unlock only when writting memory??
+    SST26V_UnlockWrite(obj);   // maybe to delete: unlock only when writting memory??
 }
 
-void SST26V_Reset(SST26V_t *conf)
+void SST26V_Reset(SST26V_t *obj)
 {
-    SST26V_WriteEnableReset(&conf->spi);
-    SST26V_WriteReset(&conf->spi);
+    SST26V_WriteEnableReset(&obj->spi);
+    SST26V_WriteReset(&obj->spi);
 }
 
-void SST26V_UnlockWrite(SST26V_t *conf)
+void SST26V_UnlockWrite(SST26V_t *obj)
 {
     unsigned char tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
     // enable write
-    SST26V_WriteEnableWriteReg(&conf->spi);
+    SST26V_WriteEnableWriteReg(&obj->spi);
     // populate register ('0' unlock every block)
     memset(tempWriteProtectionRegisters, 0x00, SST26V_NUM_BYTES_PROTECTION_REG * sizeof(unsigned char));
     // set unlock write
-    SST26V_WriteBlockProtectionReg(&conf->spi, tempWriteProtectionRegisters); 
+    SST26V_WriteBlockProtectionReg(&obj->spi, tempWriteProtectionRegisters); 
 }
 
-void SST26V_LockWrite(SST26V_t *conf)
+void SST26V_LockWrite(SST26V_t *obj)
 {
     unsigned char tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
     // enable write
-    SST26V_WriteEnableWriteReg(&conf->spi);
+    SST26V_WriteEnableWriteReg(&obj->spi);
     // populate register ('1' lock every block)
     memset(tempWriteProtectionRegisters, 0xFF, SST26V_NUM_BYTES_PROTECTION_REG * sizeof(unsigned char));
     // set lock write
-    SST26V_WriteBlockProtectionReg(&conf->spi, tempWriteProtectionRegisters);  
+    SST26V_WriteBlockProtectionReg(&obj->spi, tempWriteProtectionRegisters);  
 }
 
 void SST26V_Erase4KBSector(SPI_t *spi, unsigned long address)
