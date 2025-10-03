@@ -9,7 +9,7 @@
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 1.0.2
+ * @version 1.0.3
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
@@ -73,9 +73,9 @@ typedef struct
     /** @brief Identifiant de la mémoire flash */
     unsigned char id;
     /** @brief Fonction pour Write Protection */
-    GPIO_t wp;
+    GPIO_t pinWP;
     /** @brief Fonction pour Hold */
-    GPIO_t hold;
+    GPIO_t pinHOLD;
      /** @brief Configuration SPI associée */
     SPI_t spi;
 }SST26V_t;
