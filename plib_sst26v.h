@@ -1,6 +1,3 @@
-#ifndef PLIB_MEMORY_H
-#define PLIB_MEMORY_H
-
 /**
  * @file plib_sst26v.h
  * @author Ramiro Najera
@@ -9,15 +6,16 @@
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 1.0.3
+ * @version 1.0.4
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
 
+#ifndef PLIB_MEMORY_H
+#define PLIB_MEMORY_H
+
 #include "libs/common_c_libs/plib_comm_struct.h"
-/**
- * 
- */
+
 /** @defgroup SST26V_Registers Registres du SST26V
  *  @{
  */
@@ -123,8 +121,9 @@ void SST26V_ClearHoldingHW(SST26V_t *obj);
 /**
  * @brief Initialise le module SST26V avec la configuration fournie
  * @param obj Pointeur vers la configuration du module
+ * @return unsigned char 0 ok, 1 erreur
  */
-void SST26V_Init(SST26V_t *obj);
+unsigned char SST26V_InitChip(SST26V_t *obj);
 
 /**
  * @brief Effectue une réinitialisation en appelant les fonctions d'activation et de

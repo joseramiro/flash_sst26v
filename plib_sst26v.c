@@ -6,7 +6,7 @@
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 1.0.3
+ * @version 1.0.4
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
@@ -59,14 +59,17 @@ void SST26V_ClearHoldingHW(SST26V_t *obj)
 
 /* ==== Fonctions de configuration ==== */
 
-void SST26V_Init(SST26V_t *obj)
+unsigned char SST26V_InitChip(SST26V_t *obj)
 {
+    // todo: Add a checkwrite register(see mcp23s17 as example)
     SST26V_EndTramission(&obj->spi);
     SST26V_SetHoldingHW(obj);            // disabled when set to 1
     SST26V_SetWriteProtectionHW(obj);    // disabled when set to 1
     SST26V_Reset(obj);
     // unlock write
     SST26V_UnlockWrite(obj);   // maybe to delete: unlock only when writting memory??
+    // Return error code
+    return 0;
 }
 
 void SST26V_Reset(SST26V_t *obj)
