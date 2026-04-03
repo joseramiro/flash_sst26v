@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-04-03
+- Added WaitBusy function and added return error code during erase and write data
+
 ## [1.0.3] - 2025-10-03
 - Renamed GPIO pins
 

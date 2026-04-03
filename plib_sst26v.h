@@ -9,7 +9,7 @@
  * Ce fichier en-tête est le point d'entrée principal pour la bibliothèque de gestion des la mémoire
  * flash SST26V. Il inclut les autres fichiers d'en-tête nécessaires pour la gestion de
  * communication SPI avec la mémoire flash SST26V et le contrôle du Chip Select (CS).
- * @version 1.0.3
+ * @version 1.0.4
  * @date 2025-04-23
  * @copyright Copyright (c) 2025
  */
@@ -63,6 +63,8 @@
 
 /** @brief Nombre de bytes dans "Proteced Block Register" */
 #define SST26V_NUM_BYTES_PROTECTION_REG     18
+
+#define SST26V_TIMEOUT      1000
 
 /** 
  * @struct SST26V_t
@@ -144,6 +146,8 @@ void SST26V_UnlockWrite(SST26V_t *obj);
  * @param obj Pointeur vers la configuration du module
  */
 void SST26V_LockWrite(SST26V_t *obj);
+
+unsigned char SST26V_WaitBusy(SPI_t *spi, unsigned long timeout);
 
 /**
  * @brief Efface un secteur de mémoire de 4 Ko à l'adresse spécifiée.
