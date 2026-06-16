@@ -14,10 +14,9 @@
  * @copyright Copyright (c) 2025
  */
 
+#include <stdint.h>
 #include "libs/common_c_libs/plib_comm_struct.h"
-/**
- * 
- */
+
 /** @defgroup SST26V_Registers Registres du SST26V
  *  @{
  */
@@ -73,54 +72,11 @@
 typedef struct
 {
     /** @brief Identifiant de la mémoire flash */
-    unsigned char id;
-    /** @brief Fonction pour Write Protection */
-    GPIO_t pinWP;
-    /** @brief Fonction pour Hold */
-    GPIO_t pinHOLD;
+    uint8_t id;
      /** @brief Configuration SPI associée */
     SPI_t spi;
 }SST26V_t;
 
-/* ==== Fonctions SPI ==== */
-
-/**
- * @brief Démarre une transmission SPI avec le SST26V.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_StartTranmission(SPI_t *spi);
-
-/**
- * @brief Termine une transmission SPI avec le SST26V.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_EndTramission(SPI_t *spi);
-
-/**
- * @brief Met le pin Write Protection à 1
- * @param obj Configuration de SST26V
- */
-void SST26V_SetWriteProtectionHW(SST26V_t *obj);
-
-/**
- * @brief Met le pin Write Protection à 0
- * @param obj Configuration de SST26V
- */
-void SST26V_ClearWriteProtectionHW(SST26V_t *obj);
-
-/**
- * @brief Met le pin Holding à 1
- * @param obj Configuration de SST26V
- */
-void SST26V_SetHoldingHW(SST26V_t *obj);
-
-/**
- * @brief Met le pin Holding à 0
- * @param obj Configuration de SST26V
- */
-void SST26V_ClearHoldingHW(SST26V_t *obj);
-
-/* ==== Fonctions de configuration ==== */
 
 /**
  * @brief Initialise le module SST26V avec la configuration fournie
@@ -147,14 +103,14 @@ void SST26V_UnlockWrite(SST26V_t *obj);
  */
 void SST26V_LockWrite(SST26V_t *obj);
 
-unsigned char SST26V_WaitBusy(SPI_t *spi, unsigned long timeout);
+uint8_t SST26V_WaitBusy(SPI_t *spi, uint32_t timeout);
 
 /**
  * @brief Efface un secteur de mémoire de 4 Ko à l'adresse spécifiée.
  * @param spi Pointeur vers la configuration SPI
  * @param address Adresse du secteur de mémoire à effacer
  */
-void SST26V_Erase4KBSector(SPI_t *spi, unsigned long address);
+void SST26V_Erase4KBSector(SPI_t *spi, uint32_t address);
 
 /**
  * @brief Lit des données depuis la mémoire flash.
@@ -163,7 +119,7 @@ void SST26V_Erase4KBSector(SPI_t *spi, unsigned long address);
  * @param size Taille des données à lire
  * @param data Tampon pour stocker les données lues
  */
-void SST26V_ReadMemory(SPI_t *spi, unsigned long address, unsigned int size, unsigned char* data);
+void SST26V_ReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t* data);
 
 /**
  * @brief Écrit des données dans la mémoire flash. Il est important que l'effacement soit effectué
@@ -173,39 +129,20 @@ void SST26V_ReadMemory(SPI_t *spi, unsigned long address, unsigned int size, uns
  * @param address Adresse de départ des données
  * @param size Nombre d'octets à écrire
  */
-void SST26V_WriteMemory(SPI_t *spi, unsigned char* data, unsigned long address, unsigned int size);
+void SST26V_WriteMemory(SPI_t *spi, uint8_t* data, uint32_t address, uint16_t size);
 
 /**
  * @brief Efface un secteur de mémoire plus grand que 4 Ko à l'adresse spécifiée.
  * @param spi Pointeur vers la configuration SPI
  * @param address Adresse du secteur de mémoire à effacer
  */
-void SST26V_EraseMore4KBSector(SPI_t *spi, unsigned long address);
+void SST26V_EraseMore4KBSector(SPI_t *spi, uint32_t address);
 
 /**
  * @brief Efface toute la mémoire.
  * @param spi Pointeur vers la configuration SPI
  */
 void SST26V_EraseAll(SPI_t *spi);
-
-/* ==== Fonctions d'écriture ==== */
-
-/**
- * @brief Écrit un registre (1 octet) via SPI. Aucune réponse n'est attendue.
- * @param spi Pointeur vers la configuration SPI
- * @param reg Registre à envoyer (1 octet)
- */
-void SST26V_WriteRegister(SPI_t *spi, unsigned char reg);
-
-/**
- * @brief Écrit un registre (1 octet) et des données supplémentaires via SPI. Aucune réponse n'est
- * attendue.
- * @param spi Pointeur vers la configuration SPI
- * @param reg Registre à envoyer (1 octet)
- * @param writeData Données à envoyer
- * @param size Taille des données à envoyer
- */
-void SST26V_WriteData(SPI_t *spi, unsigned char reg, unsigned char* writeData, unsigned int size);
 
 /**
  * @brief Annule une séquence de réinitialisation (après activation de la réinitialisation).
@@ -231,14 +168,14 @@ void SST26V_WriteReset(SPI_t *spi);
  * @param regs Tampon contenant les données pour les registres de configuration (1 octet) et de
  * statut (1 octet)
  */
-void SST26V_WriteStatusReg(SPI_t *spi, unsigned char* regs);
+void SST26V_WriteStatusReg(SPI_t *spi, uint8_t* regs);
 
 /**
  * @brief Définit la longueur de la rafale de lecture des données.
  * @param spi Pointeur vers la configuration SPI
  * @param length Longueur de la rafale de données
  */
-void SST26V_WriteBurstLenReg(SPI_t *spi, unsigned char length);
+void SST26V_WriteBurstLenReg(SPI_t *spi, uint8_t length);
 
 /**
  * @brief Active les opérations d'écriture.
@@ -269,45 +206,34 @@ void SST26V_WriteResumeWrite(SPI_t *spi);
  * @param spi Pointeur vers la configuration SPI
  * @param regs Tampon contenant les données des registres de protection de bloc (18 octets)
  */
-void SST26V_WriteBlockProtectionReg(SPI_t *spi, unsigned char* regs);
-
-/* ==== Fonctions de lecture ==== */
-
-/**
- * @brief Écrit un registre (1 octet) via SPI, puis lit un nombre spécifié d'octets.
- * @param spi Pointeur vers la configuration SPI
- * @param reg Registre à envoyer (1 octet) 
- * @param size Taille des données à lire
- * @param readData Tampon pour stocker les données lues
- */
-void SST26V_WriteReadRegister(SPI_t *spi, unsigned char reg, unsigned int size, unsigned char* readData);
+void SST26V_WriteBlockProtectionReg(SPI_t *spi, uint8_t* regs);
 
 /**
  * @brief Lit le registre de statut.
  * @param spi Pointeur vers la configuration SPI
  * @param data Tampon pour stocker le registre de statut (1 octet)
  */
-void SST26V_ReadStatusReg(SPI_t *spi, unsigned char* data);
+void SST26V_ReadStatusReg(SPI_t *spi, uint8_t* data);
 
 /**
  * @brief Lit le registre de configuration.
  * @param spi Pointeur vers la configuration SPI
  * @param data Tampon pour stocker le registre de configuration (1 octet)
  */
-void SST26V_ReadConfigurationReg(SPI_t *spi, unsigned char* data);
+void SST26V_ReadConfigurationReg(SPI_t *spi, uint8_t* data);
 
 /**
  * @brief Lit l'ID JEDEC.
  * @param spi Pointeur vers la configuration SPI
  * @param data Tampon pour stocker l'ID JEDEC (3 octets)
  */
-void SST26V_ReadJEDECIdReg(SPI_t *spi, unsigned char* data);
+void SST26V_ReadJEDECIdReg(SPI_t *spi, uint8_t* data);
 
 /**
  * @brief Lit les registres de protection de bloc.
  * @param spi Pointeur vers la configuration SPI
  * @param data Tampon pour stocker les registres de protection de bloc (18 octets)
  */
-void SST26V_ReadBlockProtectionReg(SPI_t *spi, unsigned char* data);
+void SST26V_ReadBlockProtectionReg(SPI_t *spi, uint8_t* data);
 
 #endif  // PLIB_MEMORY_H

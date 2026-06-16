@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-06-16
+- Merged spi file into main file, modified variable type to use stdint.h types
+
 ## [1.0.4] - 2026-04-03
 - Added WaitBusy function and added return error code during erase and write data
 
