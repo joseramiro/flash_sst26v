@@ -14,64 +14,252 @@
 #include <string.h>
 #include "plib_sst26v.h"
 
-// Static functions
+/** @brief Nombre de bytes dans "Proteced Block Register" */
+#define SST26V_NUM_BYTES_PROTECTION_REG     18
 
-static void SST26V_WriteByte(SPI_t *spi, uint8_t* data);
-static void SST26V_ReadByte(SPI_t *spi, uint8_t* data);
-static void SST26V_WriteBuffer(SPI_t *spi, uint8_t* data, uint16_t size);
-static void SST26V_ReadBuffer(SPI_t *spi, uint8_t* data, uint16_t size);
-static void SST26V_StartTranmission(SPI_t *spi);
-static void SST26V_EndTramission(SPI_t *spi);
-static void SST26V_WriteRegister(SPI_t *spi, uint8_t reg);
-static void SST26V_WriteData(SPI_t *spi, uint8_t reg, uint8_t* writeData, uint16_t size);
-static void SST26V_WriteReadRegister(SPI_t *spi, uint8_t reg, uint16_t size, uint8_t* readData);
+/**
+ * @brief Temps maximum pour réaliser une écriture
+ */
+#define WRITE_TIMEOUT      1000
 
-// Public API
+/**
+ * @brief Identifiant du fabriquant
+ */
+#define MANUFACTURER_ID     0xBF
 
-void SST26V_Init(SST26V_t *obj)
+/**
+ * @brief Identifiant du type de périphérique
+ */
+#define DEVICE_TYPE         0x26
+
+/**
+ * @brief Identifiant du produit
+ */
+#define DEVICE_ID           0x43
+
+/*==============================================================================
+ * Private function prototypes
+ *============================================================================*/
+
+static void Write(SPI_t *spi, uint8_t* data, const uint16_t size);
+static void Read(SPI_t *spi, uint8_t* data, const uint16_t size);
+static void StartTranmission(SPI_t *spi);
+static void EndTramission(SPI_t *spi);
+static void WriteInstruction(SPI_t *spi, uint8_t reg);
+static void WriteRegister(SPI_t *spi, uint8_t reg, uint8_t* writeData, const uint16_t size);
+static void ReadRegister(SPI_t *spi, uint8_t reg, const uint16_t size, uint8_t* readData);
+static void Unlock(SST26V_t *obj);
+static void Lock(SST26V_t *obj);
+static void SendEnableReset(SPI_t *spi);
+static void SendReset(SPI_t *spi);
+static void Reset(SST26V_t *obj);
+static void SendEnableWrite(SPI_t *spi);
+static void SendDisableWrite(SPI_t *spi);
+static void SendProtectedWriteBlocks(SPI_t *spi, uint8_t* regs);
+static void ReadStatus(SPI_t *spi, uint8_t* data);
+static void ReadId(SPI_t *spi, uint8_t* data);
+static uint8_t WaitBusy(SPI_t *spi, uint32_t timeout);
+static void SendEraseChip(SPI_t *spi);
+static void SendEraseSector(SPI_t *spi, uint32_t address);
+static void SendWriteMemory(SPI_t *spi, uint8_t* data, uint32_t address, uint16_t size);
+static void SendReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t* data);
+
+/*==============================================================================
+ * Private data
+ *============================================================================*/
+
+/*==============================================================================
+ * Public functions
+ *============================================================================*/
+
+uint8_t SST26V_Init(SST26V_t *obj)
 {
-    SST26V_EndTramission(&obj->spi);
-    SST26V_Reset(obj);
-    // unlock write
-    SST26V_UnlockWrite(obj);   // maybe to delete: unlock only when writting memory??
+    // Init sequence
+    EndTramission(&obj->spi);
+    Reset(obj);
+    Lock(obj);
+
+    // Check connection by reading id
+    uint8_t id[3];
+    ReadId(&obj->spi, id);
+    if(id[0] == MANUFACTURER_ID && id[1] == DEVICE_TYPE && id[2] == DEVICE_ID)
+        return 0;
+    return 1;
 }
 
-void SST26V_Reset(SST26V_t *obj)
+void SST26V_ReadMemory(SST26V_t *obj, uint32_t address, uint16_t size, uint8_t* data)
 {
-    SST26V_WriteEnableReset(&obj->spi);
-    SST26V_WriteReset(&obj->spi);
+    SendReadMemory(&obj->spi, address, size, data);
 }
 
-void SST26V_UnlockWrite(SST26V_t *obj)
+uint8_t SST26V_WriteMemory(SST26V_t *obj, uint8_t* data, uint32_t address, uint16_t size)
+{
+     // Wait flash to be available otherwise return error code
+    if(WaitBusy(&obj->spi, WRITE_TIMEOUT))
+        return 1;
+    // Write flash data
+    Unlock(obj);
+    SendEnableWrite(&obj->spi);
+    SendWriteMemory(&obj->spi, data, address, size);
+    SendDisableWrite(&obj->spi);
+    Lock(obj);
+    return 0;
+}
+
+uint8_t SST26V_EraseSector(SST26V_t *obj, uint32_t address)
+{
+    // Wait flash to be available otherwise return error code
+    if(WaitBusy(&obj->spi, WRITE_TIMEOUT))
+        return 1;
+    // populate current flash array with read data
+    Unlock(obj);
+    SendEnableWrite(&obj->spi);
+    SendEraseSector(&obj->spi, address);
+    SendDisableWrite(&obj->spi);
+    Lock(obj);
+    return 0;
+}
+
+uint8_t SST26V_EraseChip(SST26V_t *obj)
+{
+    // Wait flash to be available otherwise return error code
+    if(WaitBusy(&obj->spi, WRITE_TIMEOUT))
+        return 1;
+    // populate current flash array with read data
+    Unlock(obj);
+    SendEnableWrite(&obj->spi);
+    SendEraseChip(&obj->spi);
+    SendDisableWrite(&obj->spi);
+    Lock(obj);
+    return 0;
+}
+
+/*==============================================================================
+ * Private functions
+ *============================================================================*/
+
+static void Write(SPI_t *spi, uint8_t* data, const uint16_t size)
+{
+    if(spi->Write)
+        spi->Write(data, size);
+}
+
+static void Read(SPI_t *spi, uint8_t* data, const uint16_t size)
+{
+    if(spi->Read)
+        spi->Read(data, size);
+}
+
+static void StartTranmission(SPI_t *spi)
+{
+    if(spi->pinEN.Clear != NULL)
+        spi->pinEN.Clear();
+    if(spi->pinCS.Clear != NULL) 
+        spi->pinCS.Clear();
+}
+
+static void EndTramission(SPI_t *spi)
+{
+    if(spi->pinCS.Set != NULL)
+        spi->pinCS.Set();
+    if(spi->pinEN.Set != NULL)
+        spi->pinEN.Set();
+}
+
+static void WriteInstruction(SPI_t *spi, uint8_t reg)
+{
+    StartTranmission(spi);
+    Write(spi, &reg, 1);
+    EndTramission(spi);
+}
+
+static void WriteRegister(SPI_t *spi, uint8_t reg, uint8_t* writeData, const uint16_t size)
+{
+    StartTranmission(spi);
+    Write(spi, &reg, 1);
+    Write(spi, writeData, size);
+    EndTramission(spi);
+}
+
+static void ReadRegister(SPI_t *spi, uint8_t reg, const uint16_t size, uint8_t* readData)
+{
+    StartTranmission(spi);
+    Write(spi, &reg, 1);
+    Read(spi, readData, size);
+    EndTramission(spi);
+}
+
+static void Unlock(SST26V_t *obj)
 {
     uint8_t tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
     // enable write
-    SST26V_WriteEnableWriteReg(&obj->spi);
+    SendEnableWrite(&obj->spi);
     // populate register ('0' unlock every block)
     memset(tempWriteProtectionRegisters, 0x00, SST26V_NUM_BYTES_PROTECTION_REG * sizeof(uint8_t));
     // set unlock write
-    SST26V_WriteBlockProtectionReg(&obj->spi, tempWriteProtectionRegisters); 
+    SendProtectedWriteBlocks(&obj->spi, tempWriteProtectionRegisters); 
 }
 
-void SST26V_LockWrite(SST26V_t *obj)
+static void Lock(SST26V_t *obj)
 {
     uint8_t tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
     // enable write
-    SST26V_WriteEnableWriteReg(&obj->spi);
+    SendEnableWrite(&obj->spi);
     // populate register ('1' lock every block)
     memset(tempWriteProtectionRegisters, 0xFF, SST26V_NUM_BYTES_PROTECTION_REG * sizeof(uint8_t));
     // set lock write
-    SST26V_WriteBlockProtectionReg(&obj->spi, tempWriteProtectionRegisters);  
+    SendProtectedWriteBlocks(&obj->spi, tempWriteProtectionRegisters);  
 }
 
-uint8_t SST26V_WaitBusy(SPI_t *spi, uint32_t timeout)
+static void SendEnableReset(SPI_t *spi)
+{
+    WriteInstruction(spi, SST26V_RSTEN);
+}
+
+static void SendReset(SPI_t *spi)
+{
+    WriteInstruction(spi, SST26V_RST);
+}
+
+static void Reset(SST26V_t *obj)
+{
+    SendEnableReset(&obj->spi);
+    SendReset(&obj->spi);
+}
+
+static void SendEnableWrite(SPI_t *spi)
+{
+    WriteInstruction(spi, SST26V_WREN);
+}
+
+static void SendDisableWrite(SPI_t *spi)
+{
+    WriteInstruction(spi, SST26V_WRDI);
+}
+
+static void SendProtectedWriteBlocks(SPI_t *spi, uint8_t* regs)
+{
+    WriteRegister(spi, SST26V_WBPR, regs, 18);
+}
+
+static void ReadStatus(SPI_t *spi, uint8_t* data)
+{
+    ReadRegister(spi, SST26V_RDSR, 1, data);
+}
+
+static void ReadId(SPI_t *spi, uint8_t* data)
+{
+    ReadRegister(spi, SST26V_JEDEC_ID, 3, data);
+}
+
+static uint8_t WaitBusy(SPI_t *spi, uint32_t timeout)
 {
     uint8_t status;
     uint32_t elapsed = 0;
 
-    while (1)
+    while(1)
     {
-        SST26V_ReadStatusReg(spi, &status);
+        ReadStatus(spi, &status);
         elapsed++;
 
         if ((status & 0x80) == 0)
@@ -82,214 +270,56 @@ uint8_t SST26V_WaitBusy(SPI_t *spi, uint32_t timeout)
     }
 }
 
-void SST26V_Erase4KBSector(SPI_t *spi, uint32_t address)
+static void SendEraseChip(SPI_t *spi)
+{
+    WriteInstruction(spi, SST26V_CE);
+}
+
+static void SendEraseSector(SPI_t *spi, uint32_t address)
 {
     uint8_t tmpData[4];
     // Start tranmission
-    SST26V_StartTranmission(spi);
+    StartTranmission(spi);
     // Send register and address
     tmpData[0] = SST26V_SE;
     tmpData[1] = (address >> 16);
     tmpData[2] = (address >> 8);
     tmpData[3] = (address);
-    SST26V_WriteBuffer(spi, tmpData, 4);
+    Write(spi, tmpData, 4);
     // Stop tranmission
-    SST26V_EndTramission(spi);
+    EndTramission(spi);
 }
 
-void SST26V_ReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t* data)
+static void SendWriteMemory(SPI_t *spi, uint8_t* data, uint32_t address, uint16_t size)
 {
     uint8_t tmpData[4];
     // Start tranmission
-    SST26V_StartTranmission(spi);
-    // Send register and start address
-    tmpData[0] = SST26V_READ;
-    tmpData[1] = (address >> 16);
-    tmpData[2] = (address >> 8);
-    tmpData[3] = (address);
-    SST26V_WriteBuffer(spi, tmpData, 4);
-    // Read data (size)
-    SST26V_ReadBuffer(spi, data, size);
-    // Stop tranmission
-    SST26V_EndTramission(spi);
-}
-
-void SST26V_WriteMemory(SPI_t *spi, uint8_t* data, uint32_t address, uint16_t size)
-{
-    uint8_t tmpData[4];
-    // Start tranmission
-    SST26V_StartTranmission(spi);
+    StartTranmission(spi);
     // Send register and address
     tmpData[0] = SST26V_PP;
     tmpData[1] = (address >> 16);
     tmpData[2] = (address >> 8);
     tmpData[3] = (address);
-    SST26V_WriteBuffer(spi, tmpData, 4);
+    Write(spi, tmpData, 4);
     // Send data to be written
-    SST26V_WriteBuffer(spi, data, size);
+    Write(spi, data, size);
     // Stop tranmission
-    SST26V_EndTramission(spi);
+    EndTramission(spi);
 }
 
-void SST26V_EraseMore4KBSector(SPI_t *spi, uint32_t address)
+static void SendReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t* data)
 {
     uint8_t tmpData[4];
     // Start tranmission
-    SST26V_StartTranmission(spi);
-    // Send register and address
-    tmpData[0] = SST26V_BE;
+    StartTranmission(spi);
+    // Send register and start address
+    tmpData[0] = SST26V_READ;
     tmpData[1] = (address >> 16);
     tmpData[2] = (address >> 8);
     tmpData[3] = (address);
-    SST26V_WriteBuffer(spi, tmpData, 4);
+    Write(spi, tmpData, 4);
+    // Read data (size)
+    Read(spi, data, size);
     // Stop tranmission
-    SST26V_EndTramission(spi);
-}
-
-void SST26V_EraseAll(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_CE);
-}
-
-void Memory_WriteDisableReset(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_NOP);
-}
-
-void SST26V_WriteEnableReset(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_RSTEN);
-}
-
-void SST26V_WriteReset(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_RST);
-}
-
-void SST26V_WriteStatusReg(SPI_t *spi, uint8_t* regs)
-{
-    SST26V_WriteData(spi, SST26V_WRSR, regs, 2);
-}
-
-void SST26V_WriteBurstLenReg(SPI_t *spi, uint8_t length)
-{
-    uint8_t tmpData[1];
-    // Start tranmission
-    SST26V_StartTranmission(spi);
-    // Send register and configuration
-    tmpData[0] = SST26V_SB;
-    SST26V_WriteByte(spi, tmpData);
-    SST26V_WriteByte(spi, &length);
-    // Stop tranmission
-    SST26V_EndTramission(spi);
-}
-
-void SST26V_WriteEnableWriteReg(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_WREN);
-}
-
-void SST26V_WriteDisableWriteReg(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_WRDI);
-}
-
-void SST26V_WriteSuspendWrite(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_WRSU);
-}
-
-void SST26V_WriteResumeWrite(SPI_t *spi)
-{
-    SST26V_WriteRegister(spi, SST26V_WRRE);
-}
-
-void SST26V_WriteBlockProtectionReg(SPI_t *spi, uint8_t* regs)
-{
-    SST26V_WriteData(spi, SST26V_WBPR, regs, 18);
-}
-
-void SST26V_ReadStatusReg(SPI_t *spi, uint8_t* data)
-{
-    SST26V_WriteReadRegister(spi, SST26V_RDSR, 1, data);
-}
-
-void SST26V_ReadConfigurationReg(SPI_t *spi, uint8_t* data)
-{
-    SST26V_WriteReadRegister(spi, SST26V_RDCR, 1, data);
-}
-
-void SST26V_ReadJEDECIdReg(SPI_t *spi, uint8_t* data)
-{
-    SST26V_WriteReadRegister(spi, SST26V_JEDEC_ID, 3, data);
-}
-
-void SST26V_ReadBlockProtectionReg(SPI_t *spi, uint8_t* data)
-{
-    SST26V_WriteReadRegister(spi, SST26V_RBPR, 18, data);
-}
-
-// Static functions
-
-static void SST26V_WriteByte(SPI_t *spi, uint8_t* data)
-{
-    if(spi->Write)
-        spi->Write(data, 1);
-}
-
-static void SST26V_ReadByte(SPI_t *spi, uint8_t* data)
-{
-    if(spi->Read)
-        spi->Read(data, 1);
-}
-
-static void SST26V_WriteBuffer(SPI_t *spi, uint8_t* data, uint16_t size)
-{
-    for(uint8_t i = 0; i < size; i++)
-        SST26V_WriteByte(spi, &data[i]);
-}
-
-static void SST26V_ReadBuffer(SPI_t *spi, uint8_t* data, uint16_t size)
-{
-    for(uint8_t i = 0; i < size; i++)
-        SST26V_ReadByte(spi, &data[i]);
-}
-
-static void SST26V_StartTranmission(SPI_t *spi)
-{
-    if(spi->pinEN.Clear != NULL)
-        spi->pinEN.Clear();
-    if(spi->pinCS.Clear != NULL) 
-        spi->pinCS.Clear();
-}
-
-static void SST26V_EndTramission(SPI_t *spi)
-{
-    if(spi->pinCS.Set != NULL)
-        spi->pinCS.Set();
-    if(spi->pinEN.Set != NULL)
-        spi->pinEN.Set();
-}
-
-static void SST26V_WriteRegister(SPI_t *spi, uint8_t reg)
-{
-    SST26V_StartTranmission(spi);
-    SST26V_WriteByte(spi, &reg);
-    SST26V_EndTramission(spi);
-}
-
-static void SST26V_WriteData(SPI_t *spi, uint8_t reg, uint8_t* writeData, uint16_t size)
-{
-    SST26V_StartTranmission(spi);
-    SST26V_WriteByte(spi, &reg);
-    SST26V_WriteBuffer(spi, writeData, size);
-    SST26V_EndTramission(spi);
-}
-
-static void SST26V_WriteReadRegister(SPI_t *spi, uint8_t reg, uint16_t size, uint8_t* readData)
-{
-    SST26V_StartTranmission(spi);
-    SST26V_WriteByte(spi, &reg);
-    SST26V_ReadBuffer(spi, readData, size);
-    SST26V_EndTramission(spi);
+    EndTramission(spi);
 }

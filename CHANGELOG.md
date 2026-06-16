@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-07-22
+- Added check connection in init by reading id
+- Updated doxygen documentation and cleaned up functions to static
+
 ## [1.1.0] - 2026-06-16
 - Merged spi file into main file, modified variable type to use stdint.h types
 

@@ -1,6 +1,3 @@
-#ifndef PLIB_MEMORY_H
-#define PLIB_MEMORY_H
-
 /**
  * @file plib_sst26v.h
  * @author Ramiro Najera
@@ -14,226 +11,87 @@
  * @copyright Copyright (c) 2025
  */
 
+#ifndef PLIB_MEMORY_H
+#define PLIB_MEMORY_H
+
 #include <stdint.h>
 #include "libs/common_c_libs/plib_comm_struct.h"
 
-/** @defgroup SST26V_Registers Registres du SST26V
- *  @{
+/**
+ * @brief Liste de registres pour communication SPI
  */
-/** @brief No Operation: annule uniquement une commande de Réinitialisation Active (RSTEN) */
-#define SST26V_NOP          0x00
-/** @brief Réinitialisation Active: Réinitialisation système (logicielle) */
-#define SST26V_RSTEN        0x66
-/** @brief Réinitialisation: Réinitialisation après SST26V_RSTEN */
-#define SST26V_RST          0x99
-/** @brief Envoie le contenu du registre STATUS*/
-#define SST26V_RDSR         0x05
-/** @brief Ecrit de nouvelles valeurs dans le registre de configuration*/
-#define SST26V_WRSR         0x01
-/** @brief Envoient le contenu des registres d'état et de configuration. */
-#define SST26V_RDCR         0x35
-/** @brief Lecture de la flash */
-#define SST26V_READ         0x03
-/** @brief Spécifie le nombre d'octets à envoyer lors d'une commande de lecture */
-#define SST26V_SB           0xC0
-/** @brief  Lit le JEDEC-ID identifie le dispositif comme étant le SST26VF032B/032BA */    
-#define SST26V_JEDEC_ID     0x9F
-/** @brief Met le bit WriteEnable-Latch du registre d'état à '1' */
-#define SST26V_WREN         0x06
-/** @brief Met le bit WriteEnable-Latch du registre d'état à '0' */
-#define SST26V_WRDI         0x04
-/** @brief Efface tous les bits du secteur de 4 Ko sélectionné à '1' */
-#define SST26V_SE           0x20
-/** @brief Efface tous les bits du bloc sélectionné à '1' */
-#define SST26V_BE           0xD8
-/** @brief efface tous les bits du dispositif à '1' */
-#define SST26V_CE           0xC7
-/** @brief Programme jusqu'à 256 octets de données dans la mémoire*/
-#define SST26V_PP           0x02
-/** @brief Permet à l'hôte de programmer ou de lire tout secteur qui n'était pas en cours d'effacement.*/
-#define SST26V_WRSU         0xB0
-/** @brief L'instruction Write-Resume redémarre une commande d'écriture*/
-#define SST26V_WRRE         0x30
-/** @brief L'instruction de lecture du registre de protection de bloc*/
-#define SST26V_RBPR         0x72
-/** @brief Modifie les données du registre de protection de bloc */
-#define SST26V_WBPR         0x42
-/** @} */
-
-/** @brief Nombre de bytes dans "Proteced Block Register" */
-#define SST26V_NUM_BYTES_PROTECTION_REG     18
-
-#define SST26V_TIMEOUT      1000
+typedef enum
+{
+    SST26V_NOP = 0x00,      /**< No Operation: annule uniquement une commande de Réinitialisation Active (RSTEN) */
+    SST26V_RSTEN = 0x66,    /**< Réinitialisation Active: Réinitialisation système (logicielle) */
+    SST26V_RST = 0x99,      /**< Réinitialisation: Réinitialisation après SST26V_RSTEN */
+    SST26V_RDSR = 0x05,     /**< Envoie le contenu du registre STATUS */
+    SST26V_WRSR = 0x01,     /**< Ecrit de nouvelles valeurs dans le registre de configuration */
+    SST26V_RDCR = 0x35,     /**< Envoient le contenu des registres d'état et de configuration */
+    SST26V_READ = 0x03,     /**< Lecture de la flash */
+    SST26V_SB = 0xC0,       /**< Spécifie le nombre d'octets à envoyer lors d'une commande de lecture */
+    SST26V_JEDEC_ID = 0x9F, /**< Lit le JEDEC-ID identifie le dispositif comme étant le SST26VF032B/032BA */
+    SST26V_WREN = 0x06,     /**< Met le bit WriteEnable-Latch du registre d'état à '1' */
+    SST26V_WRDI = 0x04,     /**< Met le bit WriteEnable-Latch du registre d'état à '0' */
+    SST26V_SE = 0x20,       /**< Efface tous les bits du secteur de 4 Ko sélectionné à '1' */
+    SST26V_BE = 0xD8,       /**< Efface tous les bits du bloc sélectionné à '1' */
+    SST26V_CE = 0xC7,       /**< Efface tous les bits du dispositif à '1' */
+    SST26V_PP = 0x02,       /**< Programme jusqu'à 256 octets de données dans la mémoire */
+    SST26V_WRSU = 0xB0,     /**< Permet à l'hôte de programmer ou de lire tout secteur qui n'était pas en cours d'effacement. */
+    SST26V_WRRE = 0x30,     /**< L'instruction Write-Resume redémarre une commande d'écriture */
+    SST26V_RBPR = 0x72,     /**< L'instruction de lecture du registre de protection de bloc */
+    SST26V_WBPR = 0x42      /**< Modifie les données du registre de protection de bloc */
+}SST26VRegisters_t;
 
 /** 
  * @struct SST26V_t
- * @brief Structure de configuration du MCP23S17 
+ * @brief Structure de configuration de mémoire flash SST26V 
  */
 typedef struct
 {
-    /** @brief Identifiant de la mémoire flash */
-    uint8_t id;
-     /** @brief Configuration SPI associée */
-    SPI_t spi;
+    uint8_t id;     /**< Identifiant de l'objet */
+    SPI_t spi;      /**< Configuration SPI */
 }SST26V_t;
-
 
 /**
  * @brief Initialise le module SST26V avec la configuration fournie
  * @param obj Pointeur vers la configuration du module
+ * @return uint8_t 0 ok, sinon erreur
  */
-void SST26V_Init(SST26V_t *obj);
+uint8_t SST26V_Init(SST26V_t *obj);
 
 /**
- * @brief Effectue une réinitialisation en appelant les fonctions d'activation et de
- * réinitialisation.
+ * @brief Lit des données de la mémoire flash
  * @param obj Pointeur vers la configuration du module
+ * @param address Adresse du début de la lecture
+ * @param size Nombre de bytes à lire
+ * @param data Données lues
  */
-void SST26V_Reset(SST26V_t *obj);
+void SST26V_ReadMemory(SST26V_t *obj, uint32_t address, uint16_t size, uint8_t* data);
 
 /**
- * @brief Débloque l'écriture de protection
+ * @brief Ecrit des données dans la mémoire flash
  * @param obj Pointeur vers la configuration du module
+ * @param data Données à écrire
+ * @param address Adresse du début de l'écriture
+ * @param size Nombre de bytes à lire
+ * @return uint8_t 0 ok, sinon erreur
  */
-void SST26V_UnlockWrite(SST26V_t *obj);
+uint8_t SST26V_WriteMemory(SST26V_t *obj, uint8_t* data, uint32_t address, uint16_t size);
 
 /**
- * @brief Bloque l'écriture de protection
+ * @brief Efface une page dans la mémoire flash
  * @param obj Pointeur vers la configuration du module
+ * @param address Adresse dont la page va être supprimée
+ * @return uint8_t 0 ok, sinon erreur
  */
-void SST26V_LockWrite(SST26V_t *obj);
-
-uint8_t SST26V_WaitBusy(SPI_t *spi, uint32_t timeout);
-
-/**
- * @brief Efface un secteur de mémoire de 4 Ko à l'adresse spécifiée.
- * @param spi Pointeur vers la configuration SPI
- * @param address Adresse du secteur de mémoire à effacer
- */
-void SST26V_Erase4KBSector(SPI_t *spi, uint32_t address);
+uint8_t SST26V_EraseSector(SST26V_t *obj, uint32_t address);
 
 /**
- * @brief Lit des données depuis la mémoire flash.
- * @param spi Pointeur vers la configuration SPI
- * @param address Adresse de départ où les données seront lues
- * @param size Taille des données à lire
- * @param data Tampon pour stocker les données lues
+ * @brief Efface toutes les pages dans la mémoire flash
+ * @param obj Pointeur vers la configuration du module
+ * @return uint8_t 0 ok, sinon erreur
  */
-void SST26V_ReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t* data);
-
-/**
- * @brief Écrit des données dans la mémoire flash. Il est important que l'effacement soit effectué
- * avant d'écrire de nouvelles données.
- * @param spi Pointeur vers la configuration SPI
- * @param data Tampon contenant les données à écrire
- * @param address Adresse de départ des données
- * @param size Nombre d'octets à écrire
- */
-void SST26V_WriteMemory(SPI_t *spi, uint8_t* data, uint32_t address, uint16_t size);
-
-/**
- * @brief Efface un secteur de mémoire plus grand que 4 Ko à l'adresse spécifiée.
- * @param spi Pointeur vers la configuration SPI
- * @param address Adresse du secteur de mémoire à effacer
- */
-void SST26V_EraseMore4KBSector(SPI_t *spi, uint32_t address);
-
-/**
- * @brief Efface toute la mémoire.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_EraseAll(SPI_t *spi);
-
-/**
- * @brief Annule une séquence de réinitialisation (après activation de la réinitialisation).
- * @param spi Pointeur vers la configuration SPI
- */
-void Memory_WriteDisableReset(SPI_t *spi);
-
-/**
- * @brief Active une réinitialisation.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_WriteEnableReset(SPI_t *spi);
-
-/**
- * @brief Réinitialise le dispositif. La réinitialisation doit être activée au préalable.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_WriteReset(SPI_t *spi);
-
-/**
- * @brief Écrit dans les registres de configuration et de statut.
- * @param spi Pointeur vers la configuration SPI
- * @param regs Tampon contenant les données pour les registres de configuration (1 octet) et de
- * statut (1 octet)
- */
-void SST26V_WriteStatusReg(SPI_t *spi, uint8_t* regs);
-
-/**
- * @brief Définit la longueur de la rafale de lecture des données.
- * @param spi Pointeur vers la configuration SPI
- * @param length Longueur de la rafale de données
- */
-void SST26V_WriteBurstLenReg(SPI_t *spi, uint8_t length);
-
-/**
- * @brief Active les opérations d'écriture.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_WriteEnableWriteReg(SPI_t *spi);
-
-/**
- * @brief Désactive les opérations d'écriture.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_WriteDisableWriteReg(SPI_t *spi);
-
-/**
- * @brief Suspends the write operation for flash memory.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_WriteSuspendWrite(SPI_t *spi);
-
-/**
- * @brief Reprend l'opération d'écriture pour la mémoire flash.
- * @param spi Pointeur vers la configuration SPI
- */
-void SST26V_WriteResumeWrite(SPI_t *spi);
-
-/**
- * @brief Écrit dans les registres de protection de bloc.
- * @param spi Pointeur vers la configuration SPI
- * @param regs Tampon contenant les données des registres de protection de bloc (18 octets)
- */
-void SST26V_WriteBlockProtectionReg(SPI_t *spi, uint8_t* regs);
-
-/**
- * @brief Lit le registre de statut.
- * @param spi Pointeur vers la configuration SPI
- * @param data Tampon pour stocker le registre de statut (1 octet)
- */
-void SST26V_ReadStatusReg(SPI_t *spi, uint8_t* data);
-
-/**
- * @brief Lit le registre de configuration.
- * @param spi Pointeur vers la configuration SPI
- * @param data Tampon pour stocker le registre de configuration (1 octet)
- */
-void SST26V_ReadConfigurationReg(SPI_t *spi, uint8_t* data);
-
-/**
- * @brief Lit l'ID JEDEC.
- * @param spi Pointeur vers la configuration SPI
- * @param data Tampon pour stocker l'ID JEDEC (3 octets)
- */
-void SST26V_ReadJEDECIdReg(SPI_t *spi, uint8_t* data);
-
-/**
- * @brief Lit les registres de protection de bloc.
- * @param spi Pointeur vers la configuration SPI
- * @param data Tampon pour stocker les registres de protection de bloc (18 octets)
- */
-void SST26V_ReadBlockProtectionReg(SPI_t *spi, uint8_t* data);
+uint8_t SST26V_EraseChip(SST26V_t *obj);
 
 #endif  // PLIB_MEMORY_H
