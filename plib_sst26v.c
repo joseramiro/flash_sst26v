@@ -49,7 +49,7 @@ static void WriteInstruction(SPI_t *spi, uint8_t reg);
 static void WriteRegister(SPI_t *spi, uint8_t reg, uint8_t* writeData, const uint16_t size);
 static void ReadRegister(SPI_t *spi, uint8_t reg, const uint16_t size, uint8_t* readData);
 static void Unlock(SST26V_t *obj);
-static void Lock(SST26V_t *obj);
+//static void Lock(SST26V_t *obj);
 static void SendEnableReset(SPI_t *spi);
 static void SendReset(SPI_t *spi);
 static void Reset(SST26V_t *obj);
@@ -63,6 +63,7 @@ static void SendEraseChip(SPI_t *spi);
 static void SendEraseSector(SPI_t *spi, uint32_t address);
 static void SendWriteMemory(SPI_t *spi, uint8_t* data, uint32_t address, uint16_t size);
 static void SendReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t* data);
+static uint8_t CheckId(SPI_t *spi);
 
 /*==============================================================================
  * Private data
@@ -77,14 +78,8 @@ uint8_t SST26V_Init(SST26V_t *obj)
     // Init sequence
     EndTramission(&obj->spi);
     Reset(obj);
-    Lock(obj);
-
-    // Check connection by reading id
-    uint8_t id[3];
-    ReadId(&obj->spi, id);
-    if(id[0] == MANUFACTURER_ID && id[1] == DEVICE_TYPE && id[2] == DEVICE_ID)
-        return 0;
-    return 1;
+    Unlock(obj);
+    return(CheckId(&obj->spi));
 }
 
 void SST26V_ReadMemory(SST26V_t *obj, uint32_t address, uint16_t size, uint8_t* data)
@@ -98,11 +93,9 @@ uint8_t SST26V_WriteMemory(SST26V_t *obj, uint8_t* data, uint32_t address, uint1
     if(WaitBusy(&obj->spi, WRITE_TIMEOUT))
         return 1;
     // Write flash data
-    Unlock(obj);
     SendEnableWrite(&obj->spi);
     SendWriteMemory(&obj->spi, data, address, size);
     SendDisableWrite(&obj->spi);
-    Lock(obj);
     return 0;
 }
 
@@ -112,11 +105,9 @@ uint8_t SST26V_EraseSector(SST26V_t *obj, uint32_t address)
     if(WaitBusy(&obj->spi, WRITE_TIMEOUT))
         return 1;
     // populate current flash array with read data
-    Unlock(obj);
     SendEnableWrite(&obj->spi);
     SendEraseSector(&obj->spi, address);
     SendDisableWrite(&obj->spi);
-    Lock(obj);
     return 0;
 }
 
@@ -126,11 +117,9 @@ uint8_t SST26V_EraseChip(SST26V_t *obj)
     if(WaitBusy(&obj->spi, WRITE_TIMEOUT))
         return 1;
     // populate current flash array with read data
-    Unlock(obj);
     SendEnableWrite(&obj->spi);
     SendEraseChip(&obj->spi);
     SendDisableWrite(&obj->spi);
-    Lock(obj);
     return 0;
 }
 
@@ -200,6 +189,7 @@ static void Unlock(SST26V_t *obj)
     SendProtectedWriteBlocks(&obj->spi, tempWriteProtectionRegisters); 
 }
 
+/*
 static void Lock(SST26V_t *obj)
 {
     uint8_t tempWriteProtectionRegisters[SST26V_NUM_BYTES_PROTECTION_REG];
@@ -210,6 +200,7 @@ static void Lock(SST26V_t *obj)
     // set lock write
     SendProtectedWriteBlocks(&obj->spi, tempWriteProtectionRegisters);  
 }
+*/
 
 static void SendEnableReset(SPI_t *spi)
 {
@@ -322,4 +313,13 @@ static void SendReadMemory(SPI_t *spi, uint32_t address, uint16_t size, uint8_t*
     Read(spi, data, size);
     // Stop tranmission
     EndTramission(spi);
+}
+
+static uint8_t CheckId(SPI_t *spi)
+{
+    uint8_t id[3];
+    ReadId(spi, id);
+    if(id[0] == MANUFACTURER_ID && id[1] == DEVICE_TYPE && id[2] == DEVICE_ID)
+        return 0;
+    return 1;
 }

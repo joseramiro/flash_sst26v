@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2026-07-22
+- Fixed bug reading failed when locking memory (deleted lock function)
+
 ## [1.1.2] - 2026-07-22
 - Added check connection in init by reading id
 - Updated doxygen documentation and cleaned up functions to static
